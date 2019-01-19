@@ -50,7 +50,7 @@ vscode在用户体验上表现得比较突出，基本上是以程序员工作�
   * Java Test Runner 测试
   * Java Dependency Viewer 依赖关系
 * Maven for Java 支持Maven
-* Spring Boot Extension Pack String Boot扩展包，开发Spring Boot可以安一下
+* Spring Boot Extension Pack 这是个Spring Boot扩展包，开发Spring Boot可以安一下
 
 ## 设置
 
