@@ -3,19 +3,19 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: 一辈子就是一步再一步
+title: Hexo
 subtitle:
 description:
 keywords:
-author: D F L
-language: zh-CN
+author: John Doe
+language:
 timezone:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://blog3.idealclover.net
+url: http://yoursite.com
 root: /
-permalink: :title/
+permalink: :year/:month/:day/:title/
 permalink_defaults:
 
 # Directory
@@ -35,7 +35,7 @@ titlecase: false # Transform title into titlecase
 external_link: true # Open external links in new tab
 filename_case: 0
 render_drafts: false
-post_asset_folder: true
+post_asset_folder: false
 relative_link: false
 future: true
 highlight:
@@ -73,13 +73,9 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: next
+theme: landscape
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
-  type: git
-  repo: git@github.com:/dv-vbc/dv-vbc.github.io.git
-  branch: master
-  message: 站点更新：{{ now('YYYY-MM-DD HH:mm:ss') }}
-
+  type:
