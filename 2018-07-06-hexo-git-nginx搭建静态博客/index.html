@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog3.idealclover.net","root":"/","scheme":"Mist","version":"8.0.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="实施方案方案一 在本地（服务器或个人电脑）安装hexo 使用hexo-server模块将博客发布在本地  方案二 在本地部署hexo 使用hexo-deployer-git模块将博客提交到github特定的项目 使用github-pages发布博客  方案三 在本地部署hexo 在服务器端部署git资源库服务 使用hexo的hexo-deployer-git模块将博客发布到服务器端的git资源库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="hexo+git+nginx搭建静态博客">
+<meta property="og:url" content="https://blog3.idealclover.net/2018-07-06-hexo-git-nginx%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/index.html">
+<meta property="og:site_name" content="一辈子就是一步再一步">
+<meta property="og:description" content="实施方案方案一 在本地（服务器或个人电脑）安装hexo 使用hexo-server模块将博客发布在本地  方案二 在本地部署hexo 使用hexo-deployer-git模块将博客提交到github特定的项目 使用github-pages发布博客  方案三 在本地部署hexo 在服务器端部署git资源库服务 使用hexo的hexo-deployer-git模块将博客发布到服务器端的git资源库">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-07-06T09:49:00.000Z">
+<meta property="article:modified_time" content="2023-04-26T03:04:05.906Z">
+<meta property="article:author" content="D F L">
+<meta property="article:tag" content="git">
+<meta property="article:tag" content="hexo">
+<meta property="article:tag" content="nginx">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://blog3.idealclover.net/2018-07-06-hexo-git-nginx%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>hexo+git+nginx搭建静态博客 | 一辈子就是一步再一步</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">一辈子就是一步再一步</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%96%BD%E6%96%B9%E6%A1%88"><span class="nav-number">1.</span> <span class="nav-text">实施方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%B8%80"><span class="nav-number">1.1.</span> <span class="nav-text">方案一</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%BA%8C"><span class="nav-number">1.2.</span> <span class="nav-text">方案二</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%B8%89"><span class="nav-number">1.3.</span> <span class="nav-text">方案三</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E7%8E%AF%E5%A2%83"><span class="nav-number">1.4.</span> <span class="nav-text">部署环境</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%B8%80%E5%AE%9E%E6%96%BD"><span class="nav-number">2.</span> <span class="nav-text">方案一实施</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%9C%AC%E5%9C%B0%EF%BC%88%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%88%96%E4%B8%AA%E4%BA%BA%E7%94%B5%E8%84%91%EF%BC%89%E5%AE%89%E8%A3%85hexo"><span class="nav-number">2.1.</span> <span class="nav-text">在本地（服务器或个人电脑）安装hexo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E5%B8%83%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2"><span class="nav-number">2.2.</span> <span class="nav-text">发布静态博客</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%BA%8C%E5%AE%9E%E6%96%BD"><span class="nav-number">3.</span> <span class="nav-text">方案二实施</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%9C%AC%E5%9C%B0%E5%AE%89%E8%A3%85hexo"><span class="nav-number">3.1.</span> <span class="nav-text">在本地安装hexo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2"><span class="nav-number">3.2.</span> <span class="nav-text">自动部署</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%B8%89%E5%AE%9E%E6%96%BD"><span class="nav-number">4.</span> <span class="nav-text">方案三实施</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF%E9%83%A8%E7%BD%B2git"><span class="nav-number">4.1.</span> <span class="nav-text">在服务器端部署git</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF%E9%83%A8%E7%BD%B2nginx%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.2.</span> <span class="nav-text">在服务器端部署nginx服务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E6%9C%AC%E5%9C%B0%E5%AE%89%E8%A3%85hexo-1"><span class="nav-number">4.3.</span> <span class="nav-text">在本地安装hexo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2-1"><span class="nav-number">4.4.</span> <span class="nav-text">自动部署</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">D F L</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog3.idealclover.net/2018-07-06-hexo-git-nginx%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="D F L">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一辈子就是一步再一步">
+    </span>
+
+    
+    
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          hexo+git+nginx搭建静态博客
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2018-07-06 17:49:00" itemprop="dateCreated datePublished" datetime="2018-07-06T17:49:00+08:00">2018-07-06</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2023-04-26 11:04:05" itemprop="dateModified" datetime="2023-04-26T11:04:05+08:00">2023-04-26</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="实施方案"><a href="#实施方案" class="headerlink" title="实施方案"></a>实施方案</h2><h3 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a>方案一</h3><ul>
+<li>在本地（服务器或个人电脑）安装hexo</li>
+<li>使用hexo-server模块将博客发布在本地</li>
+</ul>
+<h3 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a>方案二</h3><ul>
+<li>在本地部署hexo</li>
+<li>使用hexo-deployer-git模块将博客提交到github特定的项目</li>
+<li>使用github-pages发布博客</li>
+</ul>
+<h3 id="方案三"><a href="#方案三" class="headerlink" title="方案三"></a>方案三</h3><ul>
+<li>在本地部署hexo</li>
+<li>在服务器端部署git资源库服务</li>
+<li>使用hexo的hexo-deployer-git模块将博客发布到服务器端的git资源库</li>
+<li>使用git-hooks将资源库的变更同步到服务器端nginx网站目录</li>
+<li>使用nginx发布博客</li>
+</ul>
+<h3 id="部署环境"><a href="#部署环境" class="headerlink" title="部署环境"></a>部署环境</h3><ul>
+<li>服务端OS：CentOS release 6.9 (Final) - 64BIT</li>
+<li>客户端OS：Windows 10</li>
+<li>nodejs：4.8.4</li>
+<li>hexo：3.3.8</li>
+<li>git：2.12.0.windows.1 / 1.7.1 (CentOS)</li>
+<li>nginx：1.10.2</li>
+</ul>
+<h2 id="方案一实施"><a href="#方案一实施" class="headerlink" title="方案一实施"></a>方案一实施</h2><h3 id="在本地（服务器或个人电脑）安装hexo"><a href="#在本地（服务器或个人电脑）安装hexo" class="headerlink" title="在本地（服务器或个人电脑）安装hexo"></a>在本地（服务器或个人电脑）安装hexo</h3><p><a href="../2018-07-06-%E5%9C%A8windows%E4%B8%8B%E4%BD%BF%E7%94%A8nvmw%E7%AE%A1%E7%90%86nodejs%E7%89%88%E6%9C%AC/">安装nodejs</a>。</p>
+<p>执行以下命令安装hexo-cli：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<p>创建并初始化hexo项目目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; hexo init blog</span><br></pre></td></tr></table></figure>
+
+<p>安装hexo-server模块，用于在本地简单地发布博客：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; npm install hexo-server</span><br></pre></td></tr></table></figure>
+
+<h3 id="发布静态博客"><a href="#发布静态博客" class="headerlink" title="发布静态博客"></a>发布静态博客</h3><p>将.md文件渲染成静态文件，然后启动服务：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; hexo g</span><br><span class="line">&gt; hexo server</span><br></pre></td></tr></table></figure>
+
+<p>Linux在后台运行则执行以下语句：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nohup hexo server -p 4000 &amp;</span></span><br></pre></td></tr></table></figure>
+
+<p>现在便可以打开浏览器访问<code>http://&lt;ip&gt;:4000</code>来查看已发布的博客了。</p>
+<h2 id="方案二实施"><a href="#方案二实施" class="headerlink" title="方案二实施"></a>方案二实施</h2><h3 id="在本地安装hexo"><a href="#在本地安装hexo" class="headerlink" title="在本地安装hexo"></a>在本地安装hexo</h3><p><a href="../2018-07-06-%E5%9C%A8windows%E4%B8%8B%E4%BD%BF%E7%94%A8nvmw%E7%AE%A1%E7%90%86nodejs%E7%89%88%E6%9C%AC/">安装nodejs</a>。</p>
+<p>安装hexo并创建hexo项目。</p>
+<p>等执行成功以后安装两个模块，hexo-deployer-git和hexo-server，这俩模块的作用分别是使用git自动部署和本地简单的服务器。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; npm install hexo-deployer-git --save</span><br><span class="line">&gt; npm install hero-server</span><br></pre></td></tr></table></figure>
+
+<h3 id="自动部署"><a href="#自动部署" class="headerlink" title="自动部署"></a>自动部署</h3><p>在github账户新建资源库<code>&lt;用户名&gt;.github.io</code>。</p>
+<p>然后打开_config.yml，找到<code>deploy</code>节点。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">    <span class="built_in">type</span>: git</span><br><span class="line">    repo:  git@github.com:/&lt;account&gt;/&lt;account&gt;.github.io.git    //&lt;repository url&gt;</span><br><span class="line">    branch: master            //这里填写分支   [branch]</span><br><span class="line">    message: 提交的信息         //自定义提交信息 (默认为 Site updated: &#123;&#123; now(<span class="string">&#x27;YYYY-MM-DD HH:mm:ss&#x27;</span>) &#125;&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>保存后，尝试将我们的页面部署到服务器。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; hexo clean</span><br><span class="line">&gt; hexo generate --deploy</span><br></pre></td></tr></table></figure>
+
+<p>访问服务器地址，就可以看我们部署的博客了，以后更新博客只需要下列操作：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; hexo new <span class="string">&quot;Blog article name&quot;</span></span><br><span class="line"><span class="comment">## 编辑文章</span></span><br><span class="line">&gt; hexo clean &amp;&amp; hexo generate --deploy</span><br></pre></td></tr></table></figure>
+
+<h2 id="方案三实施"><a href="#方案三实施" class="headerlink" title="方案三实施"></a>方案三实施</h2><h3 id="在服务器端部署git"><a href="#在服务器端部署git" class="headerlink" title="在服务器端部署git"></a>在服务器端部署git</h3><p>安装git，参<a href="../2018-07-06-git%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E/">git的安装与使用说明</a>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># yum install git</span></span><br></pre></td></tr></table></figure>
+
+<p>创建git用户。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># adduser git</span></span><br><span class="line"><span class="comment"># chmod 740 /etc/sudoers</span></span><br><span class="line"><span class="comment"># vim /etc/sudoers</span></span><br></pre></td></tr></table></figure>
+
+<p>找到一下内容。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## Allow root to run any commands anywhere</span></span><br><span class="line">root    ALL=(ALL)   ALL</span><br></pre></td></tr></table></figure>
+
+<p>在下面添加一行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git     ALL=(ALL)   ALL</span><br></pre></td></tr></table></figure>
+
+<p>保存退出后改回权限。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># chmod 400 /etc/sudoers</span></span><br></pre></td></tr></table></figure>
+
+<p>随后设置git用户的密码。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## 需要root权限</span></span><br><span class="line"><span class="comment"># passwd git</span></span><br></pre></td></tr></table></figure>
+
+<p>切换至git用户，创建<code>~/.ssh</code>文件夹和<code>~/.ssh/authorized_keys</code>文件，并赋予相应的权限。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># su git</span></span><br><span class="line">$ mkdir ~/.ssh</span><br><span class="line">$ vim ~/.ssh/authorized_keys</span><br><span class="line"><span class="comment">## 然后在本地执行 cat ~/.ssh/id_rsa.pub | pbcopy，将公钥复制粘贴到authorized_keys</span></span><br><span class="line">$ chmod 600 ~/.ssh/authorzied_keys</span><br><span class="line">$ chmod 700 ~/.ssh</span><br></pre></td></tr></table></figure>
+
+<p>然后就可以执行ssh命令测试是否可以免密登录。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ssh -v git@&lt;ip/domain&gt;</span><br></pre></td></tr></table></figure>
+
+<p>至此，git用户添加完成。</p>
+<h3 id="在服务器端部署nginx服务"><a href="#在服务器端部署nginx服务" class="headerlink" title="在服务器端部署nginx服务"></a>在服务器端部署nginx服务</h3><p>找到nginx的配置文件，修改配置如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">server</span><br><span class="line">&#123;</span><br><span class="line">    listen 80;</span><br><span class="line">    <span class="comment">#listen [::]:80;</span></span><br><span class="line">    server_name www.seekbetter.me seekbetter.me;</span><br><span class="line">    index index.html index.htm index.php default.html default.htm default.php;</span><br><span class="line">    <span class="comment">#这里要改成网站的根目录</span></span><br><span class="line">    root  /path/to/www;  </span><br><span class="line"></span><br><span class="line">    include other.conf;</span><br><span class="line">    <span class="comment">#error_page   404   /404.html;</span></span><br><span class="line">    location ~ .*\.(ico|gif|jpg|jpeg|png|bmp|swf)$</span><br><span class="line">    &#123;</span><br><span class="line">        access_log   off;</span><br><span class="line">        expires      1d;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location ~ .*\.(js|css|txt|xml)?$</span><br><span class="line">    &#123;</span><br><span class="line">        access_log   off;</span><br><span class="line">        expires      12h;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        try_files <span class="variable">$uri</span> <span class="variable">$uri</span>/ =404;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    access_log  /home/wwwlogs/blog.log  access;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="在本地安装hexo-1"><a href="#在本地安装hexo-1" class="headerlink" title="在本地安装hexo"></a>在本地安装hexo</h3><p><a href="../2018-07-06-%E5%9C%A8windows%E4%B8%8B%E4%BD%BF%E7%94%A8nvmw%E7%AE%A1%E7%90%86nodejs%E7%89%88%E6%9C%AC/">安装nodejs</a>。</p>
+<p>安装hexo并创建hexo项目。</p>
+<p>等执行成功以后安装两个模块，hexo-deployer-git和hexo-server，这俩模块的作用分别是使用git自动部署和本地简单的服务器。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; npm install hexo-deployer-git --save</span><br><span class="line">&gt; npm install hero-server</span><br></pre></td></tr></table></figure>
+
+<h3 id="自动部署-1"><a href="#自动部署-1" class="headerlink" title="自动部署"></a>自动部署</h3><p>在服务器端创建一个裸仓库，裸仓库就是只保存git信息的Repository, 首先切换到git用户确保git用户拥有仓库所有权</p>
+<p>一定要加<code>--bare</code>，这样才是一个裸库。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ su git</span><br><span class="line">$ <span class="built_in">cd</span> ~</span><br><span class="line">$ git init --bare blog.git</span><br></pre></td></tr></table></figure>
+
+<p>在这里我们使用的是post-receive这个钩子，当git有收发的时候就会调用这个钩子。</p>
+<p>在~/blog.git裸库的hooks文件夹中，新建post-receive文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ vim ~/blog.git/hooks/post-receive</span><br><span class="line"></span><br><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">git --work-tree=/path/to/www --git-dir=~/blog.git checkout -f</span><br></pre></td></tr></table></figure>
+
+<p>保存后，要赋予这个文件可执行权限。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ chmod +x post-receive</span><br></pre></td></tr></table></figure>
+
+<p>然后打开_config.yml，找到deploy。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">    <span class="built_in">type</span>: git</span><br><span class="line">    repo: git@&lt;ip/domain&gt;:/home/git/blog.git    //&lt;repository url&gt;</span><br><span class="line">    branch: master            //这里填写分支   [branch]</span><br><span class="line">    message: 提交的信息         //自定义提交信息 (默认为 Site updated: &#123;&#123; now(<span class="string">&#x27;YYYY-MM-DD HH:mm:ss&#x27;</span>) &#125;&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>保存后，尝试将我们刚才写的”hello hexo”部署到服务器。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ hexo clean</span><br><span class="line">$ hexo generate --deploy</span><br></pre></td></tr></table></figure>
+
+<p>访问服务器地址，就可以看到我们写的文章”Hello hexo”，以后更新博客只需下列操作：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;Blog article name&quot;</span></span><br><span class="line"><span class="comment">## 编辑文章</span></span><br><span class="line">$ hexo clean &amp;&amp; hexo generate --deploy</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/git/" rel="tag"># git</a>
+              <a href="/tags/hexo/" rel="tag"># hexo</a>
+              <a href="/tags/nginx/" rel="tag"># nginx</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018-07-06-git%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E/" rel="prev" title="git的安装与使用说明">
+                  <i class="fa fa-chevron-left"></i> git的安装与使用说明
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018-07-07-tomcat%E3%80%81servlet%E5%92%8Cjavaee%E7%89%88%E6%9C%AC%E5%AF%B9%E5%BA%94/" rel="next" title="Tomcat、Servlet和JavaEE版本对应">
+                  Tomcat、Servlet和JavaEE版本对应 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+  
+  
+  
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">D F L</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
